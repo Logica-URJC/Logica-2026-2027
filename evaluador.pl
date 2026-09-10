@@ -11,8 +11,19 @@
 :- use_module(solucion).
 
 main :-
-    name(N),
-    display(N).
+    name(N), format("Alumno = ~p\n\n",[N]),
+    P is 0,
+    ( ejercicio01 ->
+        P1 is P + 1
+    ;
+        P1 is P
+    ),
+    ( ejercicio02 ->
+        P2 is P1 + 1
+    ;
+        P2 is P1
+    ),
+    format("Nota Practica = ~p\n\n",[P2]).
     
 
 
