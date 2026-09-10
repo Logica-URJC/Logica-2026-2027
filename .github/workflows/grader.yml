@@ -8,16 +8,23 @@ on:
 jobs:
   grade:
     runs-on: ubuntu-latest
-    container:
-      image: ciaolang/ciao:latest
 
     steps:
       - name: Descargar codigo del alumno
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0      # Descarga todo el historial para evitar arboles corruptos o incompletos
+          clean: true         # Limpia el espacio de trabajo antes de hacer checkout
+	
 
-      - name: Ejecutar batería de pruebas
+      - name: Ejecutar batería de pruebas en Ciao-Prolog
         run: |
-          ciao main -f evaluador.pl > resultado.txt 2>&1 || true
+          docker run --rm \
+            -v ${{ github.workspace }}:/code \
+            -w /code \
+            ciaolang/ciao:latest \
+            sh -c "ciao main -f evaluador.pl > resultado.txt 2>&1 || true"
+          
           cat resultado.txt
 
       - name: Publicar feedback en la ejecucion de GitHub
