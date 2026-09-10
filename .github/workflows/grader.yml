@@ -14,19 +14,13 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          clean: true
 
       - name: Ejecutar bateria de pruebas en Ciao-Prolog
         run: |
-          docker run --rm \
-            -v ${{ github.workspace }}:/code \
-            -w /code \
-            ciaolang/ciao:latest \
-            sh -c "ciao main -f evaluador.pl > resultado.txt 2>&1 || true"
-          
+          docker run --rm -v "$GITHUB_WORKSPACE:/code" -w /code ciaolang/ciao:latest ciao main -f evaluador.pl > resultado.txt 2>&1 || true
           cat resultado.txt
 
-      - name: Publicar feedback en la ejecucion de GitHub
+      - name: Publicar feedback en el Step Summary
         run: |
           echo "## Resultado de la Evaluacion" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
