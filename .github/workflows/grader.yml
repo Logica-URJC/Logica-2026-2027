@@ -5,17 +5,13 @@ on:
     branches: [ "main", "master" ]
   workflow_dispatch:
 
-env:
-  ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: "true"
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
-
 jobs:
   grade:
     runs-on: ubuntu-latest
 
     steps:
       - name: Descargar codigo del alumno
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
