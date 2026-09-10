@@ -18,8 +18,14 @@ jobs:
       - name: Descargar e invocar Ciao
         run: |
           docker pull ciaolang/ciao
-          docker run --rm -v $PWD:/code -w /code ciaolang/ciao /ciao/build/bin/ciao main -f evaluador.pl
-
+          
+          # 1. Compilar evaluador.pl a un ejecutable llamado 'eval'
+          docker run --rm -v $PWD:/code -w /code ciaolang/ciao /ciao/build/bin/ciaoc -o eval evaluador.pl
+          
+          # 2. Dar permisos y ejecutar el binario generado
+          docker run --rm -v $PWD:/code -w /code ciaolang/ciao sh -c "chmod +x ./eval && ./eval > resultado.txt 2>&1 || true"
+          
+          cat resultado.txt
       - name: Publicar feedback en el Step Summary
         run: |
           echo "## Resultado de la Evaluacion" >> $GITHUB_STEP_SUMMARY
