@@ -22,8 +22,7 @@ jobs:
           -w /code \
           ciaolang/ciao:latest \
           sh -c "/root/.ciao/bin/ciao main -f evaluador.pl > resultado.txt 2>&1 || /root/.ciaoroot/master/bin/ciao main -f evaluador.pl > resultado.txt 2>&1 || true"
-
-	  cat resultado.txt
+          cat resultado.txt
 
       - name: Publicar feedback en el Step Summary
         run: |
