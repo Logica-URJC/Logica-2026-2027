@@ -13,11 +13,10 @@ jobs:
       - name: Descargar codigo del alumno
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0      # Descarga todo el historial para evitar arboles corruptos o incompletos
-          clean: true         # Limpia el espacio de trabajo antes de hacer checkout
-	
+          fetch-depth: 0
+          clean: true
 
-      - name: Ejecutar batería de pruebas en Ciao-Prolog
+      - name: Ejecutar bateria de pruebas en Ciao-Prolog
         run: |
           docker run --rm \
             -v ${{ github.workspace }}:/code \
@@ -29,7 +28,7 @@ jobs:
 
       - name: Publicar feedback en la ejecucion de GitHub
         run: |
-          echo "## Resultado de la Evaluación" >> $GITHUB_STEP_SUMMARY
+          echo "## Resultado de la Evaluacion" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
           cat resultado.txt >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
