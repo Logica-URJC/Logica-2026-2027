@@ -1,0 +1,32 @@
+name: Evaluacion Practica Ciao-Prolog
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  grade:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar codigo del alumno
+        uses: actions/checkout@v4
+
+      - name: Instalar Ciao-Prolog
+        run: |
+          curl https://ciao-lang.org/boot -sSfL | sh
+          echo "$HOME/.ciao/bin" >> $GITHUB_PATH
+
+      - name: Ejecutar batería de pruebas
+        run: |
+          # Modifica 'evaluador.pl' y la query 'main' según tus ficheros reales
+          ciao-official main -f evaluador.pl > resultado.txt 2>&1 || true
+          cat resultado.txt
+
+      - name: Publicar feedback en la ejecucion de GitHub
+        run: |
+          echo "## Resultado de la Evaluación" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat resultado.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
