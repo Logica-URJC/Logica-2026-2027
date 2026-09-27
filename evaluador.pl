@@ -2,12 +2,14 @@
 
 :- include('DeduccionNatural'). %% dn/3
 :- include(practica).           %% test/1 enunciado/2
-:- include(solucion).           %% proof/2 name/1
+:- include(solucion).           %% alumno/3, proof/2 
 
 
 main :-
-    name(Name),
-    format("\nAlumno = ~p\n\n",[Name]),
+    alumno(Name,Mail,Grade),
+    format("\nAlumno = ~p",[Name]),
+    format("\nCorreo electrónico = ~p",[Mail]),
+    format("\nGrado = ~p\n\n",[Grade]),
     eval_test(0,Nota),
     format("\nNota Practica = ~p\n\n",[Nota]).
     
@@ -18,7 +20,7 @@ eval_test(N,Nota) :-
 eval_test_([fin],Nota,Nota).
 eval_test_([T|Ts],Nin,Nout) :-
     enunciado(T,Premisas,Consecuente),
-    format("\nEvaluar: ~p\n",[T]),
+    format("\n* Evaluar: ~p\n",[T]),
     (  proof(T,Proof),
        format("Comprobar demostración: ~p\n\n", [Proof]),
        dn(Premisas,Consecuente,Proof) ->

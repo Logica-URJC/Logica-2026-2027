@@ -11,7 +11,7 @@ jobs:
 
     steps:
       - name: Descargar codigo del alumno
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -27,27 +27,32 @@ jobs:
           
           cat resultado.txt
 
-      - name: Extraer alumno y nota
+      - name: Extraer alumno, correo, grado y nota
         id: student
         run: |
-          # Extrae el nombre tras 'Alumno ='
+          # Extrae los campos desde resultado.txt
           STUDENT_NAME=$(grep -oP 'Alumno\s*=\s*\K.*' resultado.txt | head -n 1 | xargs)
-
-          # Extrae la nota tras 'Nota Practica ='
+          STUDENT_EMAIL=$(grep -oP 'Correo electrónico\s*=\s*\K.*' resultado.txt | head -n 1 | xargs)
+          STUDENT_DEGREE=$(grep -oP 'Grado\s*=\s*\K.*' resultado.txt | head -n 1 | xargs)
           SCORE=$(grep -oP 'Nota Practica\s*=\s*\K\d+' resultado.txt | head -n 1)
 
           # Valores por defecto si no se encuentran
           STUDENT_NAME=${STUDENT_NAME:-"Desconocido"}
+          STUDENT_EMAIL=${STUDENT_EMAIL:-"Sin email"}
+          STUDENT_DEGREE=${STUDENT_DEGREE:-"Sin grado"}
           SCORE=${SCORE:-0}
 
+          # Guardar en variables de entorno de GitHub Actions
           echo "STUDENT_NAME=$STUDENT_NAME" >> $GITHUB_ENV
+          echo "STUDENT_EMAIL=$STUDENT_EMAIL" >> $GITHUB_ENV
+          echo "STUDENT_DEGREE=$STUDENT_DEGREE" >> $GITHUB_ENV
           echo "SCORE_VAL=$SCORE" >> $GITHUB_ENV
 
       # --- PARTE 1: Guardar CSV local y subirlo como artefacto oficial ---
       - name: Generar archivo CSV local de auditoria
         run: |
-          echo "Fecha,Usuario_GitHub,Nombre_Alumno,Nota" > resultado_evaluacion.csv
-          echo "$(date -u +'%Y-%m-%dT%H:%M:%SZ'),${{ github.actor }},\"${{ env.STUDENT_NAME }}\",${{ env.SCORE_VAL }}" >> resultado_evaluacion.csv
+          echo "Fecha,Usuario_GitHub,Nombre_Alumno,Correo,Grado,Nota" > resultado_evaluacion.csv
+          echo "$(date -u +'%Y-%m-%dT%H:%M:%SZ'),${{ github.actor }},\"${{ env.STUDENT_NAME }}\",\"${{ env.STUDENT_EMAIL }}\",\"${{ env.STUDENT_DEGREE }}\",${{ env.SCORE_VAL }}" >> resultado_evaluacion.csv
 
       - name: Subir CSV de respaldo como artefacto
         uses: actions/upload-artifact@v4
@@ -64,12 +69,14 @@ jobs:
           echo '```' >> $GITHUB_STEP_SUMMARY
 
       - name: Reportar nota al Google Sheet central
-        if: always() # Garantiza el envío incluso si falla algún paso no crítico
+        if: always()
         run: |
           curl -X POST "${{ secrets.WEBHOOK_URL }}" \
             -H "Content-Type: application/json" \
             -d '{
               "user": "${{ github.actor }}",
               "alumno": "'"${STUDENT_NAME}"'",
+              "correo": "'"${STUDENT_EMAIL}"'",
+              "grado": "'"${STUDENT_DEGREE}"'",
               "nota": '${SCORE_VAL}'
             }'
