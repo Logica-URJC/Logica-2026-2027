@@ -98,23 +98,6 @@ ejemploMT :-
         ]
     ).
 
-%% Derived Rules
-rule( 'MT',
-      [
-          FA --> FB,
-          !FB
-      ],
-      !FA,
-      [
-          'Premisa'(1),
-          'Premisa'(2),
-          'Supuesto'(FA),
-          'E' --> (1, 3),
-          'I' and (4, 2),
-          'I' --> (3, 5),    
-          'I' ! (6)
-      ]
-    ).
    
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% ADD here your examples and/or derived rules ;-)

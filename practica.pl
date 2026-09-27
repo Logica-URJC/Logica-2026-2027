@@ -50,7 +50,7 @@ enunciado(ejercicio05,
 
 enunciado(ejercicio06,
           [
-              p and (q or r),
+              p and q or r,
               q --> !s,
               r --> !s
           ],
@@ -67,14 +67,8 @@ enunciado(ejercicio07,
          ).
 
 enunciado(ejercicio08,
-          [
-              p --> q and r,
-              !q or s,
-              !r or t,
-              !s,
-              !t
-          ],
-          !p
+          [],
+          (!p or q) --> (q --> r) --> p --> r
          ).
 
 enunciado(ejercicio09,
@@ -93,13 +87,12 @@ enunciado(ejercicio10,
               p or q,
               p --> r and s,
               q --> t,
-              !r or !t,
-              !s --> u,
-              !u
+              !r or !v,
+              t --> !w,
+              !v --> w
           ],
-          !p
+          !(v and w) and !p or !q
          ).
-
 
 test(
     [
