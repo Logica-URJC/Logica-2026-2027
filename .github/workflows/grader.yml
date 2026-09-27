@@ -49,3 +49,4 @@ jobs:
           echo '```' >> $GITHUB_STEP_SUMMARY
           cat resultado.txt >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
+
