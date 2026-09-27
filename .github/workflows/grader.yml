@@ -71,12 +71,20 @@ jobs:
       - name: Reportar nota al Google Sheet central
         if: always()
         run: |
+          jq -n \
+            --arg user "${{ github.actor }}" \
+            --arg alumno "${STUDENT_NAME}" \
+            --arg correo "${STUDENT_EMAIL}" \
+            --arg grado "${STUDENT_DEGREE}" \
+            --argjson nota "${SCORE_VAL}" \
+            '{
+              user: $user,
+              alumno: $alumno,
+              correo: $correo,
+              grado: $grado,
+              nota: $nota
+            }' > payload.json
+
           curl -X POST "${{ secrets.WEBHOOK_URL }}" \
             -H "Content-Type: application/json" \
-            -d '{
-              "user": "${{ github.actor }}",
-              "alumno": "'"${STUDENT_NAME}"'",
-              "correo": "'"${STUDENT_EMAIL}"'",
-              "grado": "'"${STUDENT_DEGREE}"'",
-              "nota": '${SCORE_VAL}'
-            }'
+            --data-binary @payload.json
