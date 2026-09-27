@@ -26,6 +26,23 @@ jobs:
           docker run --rm -v $PWD:/code -w /code ciaolang/ciao sh -c "chmod +x ./eval && ./eval > resultado.txt 2>&1 || true"
           
           cat resultado.txt
+      - name: Extraer alumno y nota para GitHub Classroom
+        id: student
+        run: |
+          # Extrae el nombre tras 'Alumno ='
+          STUDENT_NAME=$(grep -oP 'Alumno\s*=\s*\K.*' resultado.txt | head -n 1 | xargs)
+
+          # Extrae la nota tras 'Nota Practica ='
+          SCORE=$(grep -oP 'Nota Practica\s*=\s*\K\d+' resultado.txt | head -n 1)
+
+          # Valores por defecto si no se encuentran
+          STUDENT_NAME=${STUDENT_NAME:-"Desconocido"}
+          SCORE=${SCORE:-0}
+
+          echo "STUDENT_NAME=$STUDENT_NAME" >> $GITHUB_ENV
+          echo "SCORE_VAL=$SCORE" >> $GITHUB_ENV
+
+
       - name: Publicar feedback en el Step Summary
         run: |
           echo "## Resultado de la Evaluacion" >> $GITHUB_STEP_SUMMARY
