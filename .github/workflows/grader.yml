@@ -1,4 +1,4 @@
-name: Evaluacion Practica Ciao-Prolog
+name: Evaluacion
 
 on:
   push:
@@ -10,68 +10,67 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Descargar codigo del alumno
+      - name: Checkout solución alumno
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Evaluar codigo alumno
+      - name: Ciao Prolog y ejecución
         run: |
           docker pull ciaolang/ciao
-          
-          # 1. Compilar evaluador.pl a un ejecutable llamado 'eval'
-          docker run --rm -v $PWD:/code -w /code ciaolang/ciao /ciao/build/bin/ciaoc -o eval evaluador.pl
-          
-          # 2. Dar permisos y ejecutar el binario generado
-          docker run --rm -v $PWD:/code -w /code ciaolang/ciao sh -c "chmod +x ./eval && ./eval > resultado.txt 2>&1 || true"
-          
-          cat resultado.txt
 
-      - name: Extraer alumno, correo, grado y nota
-        id: student
+          # Compilar el evaluador
+          docker run --rm \
+            -v "$PWD:/code" \
+            -w /code \
+            ciaolang/ciao \
+            /ciao/build/bin/ciaoc -o eval evaluador.pl
+
+          # Ejecutar el evaluador
+          docker run --rm \
+            -v "$PWD:/code" \
+            -w /code \
+            ciaolang/ciao \
+            sh -c "chmod +x ./eval && ./eval > resultado.txt 2>&1 || true"
+
+      - name: Evaluar
         run: |
-          # Extrae los campos desde resultado.txt
+          cat resultado.txt
+          cat resultado.txt >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Reportar resultados
+        run: |
           STUDENT_NAME=$(grep -oP 'Alumno\s*=\s*\K.*' resultado.txt | head -n 1 | xargs)
           STUDENT_EMAIL=$(grep -oP 'Correo electrónico\s*=\s*\K.*' resultado.txt | head -n 1 | xargs)
           STUDENT_DEGREE=$(grep -oP 'Grado\s*=\s*\K.*' resultado.txt | head -n 1 | xargs)
           SCORE=$(grep -oP 'Nota Practica\s*=\s*\K\d+' resultado.txt | head -n 1)
 
-          # Valores por defecto si no se encuentran
+          # Valores por defecto
           STUDENT_NAME=${STUDENT_NAME:-"Desconocido"}
           STUDENT_EMAIL=${STUDENT_EMAIL:-"Sin email"}
           STUDENT_DEGREE=${STUDENT_DEGREE:-"Sin grado"}
           SCORE=${SCORE:-0}
 
-          # Guardar en variables de entorno de GitHub Actions
-          echo "STUDENT_NAME=$STUDENT_NAME" >> $GITHUB_ENV
-          echo "STUDENT_EMAIL=$STUDENT_EMAIL" >> $GITHUB_ENV
-          echo "STUDENT_DEGREE=$STUDENT_DEGREE" >> $GITHUB_ENV
-          echo "SCORE_VAL=$SCORE" >> $GITHUB_ENV
+          # Guardar para los siguientes steps
+          echo "STUDENT_NAME=$STUDENT_NAME" >> "$GITHUB_ENV"
+          echo "STUDENT_EMAIL=$STUDENT_EMAIL" >> "$GITHUB_ENV"
+          echo "STUDENT_DEGREE=$STUDENT_DEGREE" >> "$GITHUB_ENV"
+          echo "SCORE_VAL=$SCORE" >> "$GITHUB_ENV"
 
-      # --- PARTE 1: Guardar CSV local y subirlo como artefacto oficial ---
-      - name: Generar archivo CSV local de auditoria
-        run: |
-          echo "Fecha,Usuario_GitHub,Nombre_Alumno,Correo,Grado,Nota" > resultado_evaluacion.csv
-          echo "$(date -u +'%Y-%m-%dT%H:%M:%SZ'),${{ github.actor }},\"${{ env.STUDENT_NAME }}\",\"${{ env.STUDENT_EMAIL }}\",\"${{ env.STUDENT_DEGREE }}\",${{ env.SCORE_VAL }}" >> resultado_evaluacion.csv
+          # Generar CSV
+          echo "Fecha,Usuario_GitHub,Nombre_Alumno,Correo,Grado,Nota" \
+            > resultado_evaluacion.csv
 
-      - name: Reportar nota al Google Sheet central
-        if: always()
-        env:
-          WEBHOOK_URL: https://script.google.com/macros/s/AKfycby51E8fyXRoZWKUTlrRrmDb6IJX7Sso5nmb5NU1I33kc27RVpaT0HjsDOs3pXjqmLuf/exec
-        run: |
-          # 1. Verificación previa de seguridad para evitar fallos confusos
-          if [ -z "$WEBHOOK_URL" ]; then
-            echo "::error::El Secret WEBHOOK_URL no esta disponible o esta vacio en este repositorio."
-            exit 1
-          fi
+          echo "$(date -u +'%Y-%m-%dT%H:%M:%SZ'),${{ github.actor }},\"$STUDENT_NAME\",\"$STUDENT_EMAIL\",\"$STUDENT_DEGREE\",$SCORE" \
+            >> resultado_evaluacion.csv
 
-          # 2. Construcción limpia del JSON con jq
+          # Enviar resultado
           jq -n \
             --arg user "${{ github.actor }}" \
-            --arg alumno "${STUDENT_NAME}" \
-            --arg correo "${STUDENT_EMAIL}" \
-            --arg grado "${STUDENT_DEGREE}" \
-            --argjson nota "${SCORE_VAL:-0}" \
+            --arg alumno "$STUDENT_NAME" \
+            --arg correo "$STUDENT_EMAIL" \
+            --arg grado "$STUDENT_DEGREE" \
+            --argjson nota "$SCORE" \
             '{
               user: $user,
               alumno: $alumno,
@@ -80,8 +79,16 @@ jobs:
               nota: $nota
             }' > payload.json
 
-          # 3. Petición cURL con flag -L (sigue redirecciones HTTP 302 de Google Apps Script)
-          curl -X POST "$WEBHOOK_URL" \
-            -L \
+          curl -L \
+            -X POST "https://script.google.com/macros/s/AKfycby51E8fyXRoZWKUTlrRrmDb6IJX7Sso5nmb5NU1I33kc27RVpaT0HjsDOs3pXjqmLuf/exec" \
             -H "Content-Type: application/json" \
             --data-binary @payload.json
+
+      - name: Resultado
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: resultados
+          path: |
+            resultado.txt
+            resultado_evaluacion.csv
