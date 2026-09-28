@@ -38,5 +38,6 @@ proof(ejercicio02,
 
 
 
-%% Puedes incluir reglas derivadas %%
-rule(_,_,_,_) :- fail.
+%% Incluir reglas derivadas con el predicado rule/4    
+%
+% rule(+Nombre, +Premisas, +Consecuente, +Demostracion)

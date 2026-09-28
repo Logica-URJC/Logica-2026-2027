@@ -1,10 +1,9 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%                          Copyright (C)2025 Joaquín Arias (URJC)
+%                          Copyright (C)2026 Joaquín Arias (URJC)
 %  Name: DeduccionNatural.pl
 %  Author: Joaquín Arias
-%  Version 2.0
-%  Date: 17 November 2025
-%  Purpose: Execute Natural Deduction Proofs
+%  Version x.0
+%  Date: 28 September 2026
 %  LICENSE: Apache License 2.0
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -17,6 +16,9 @@
 % Auxiliary precedence for !
 % Used to define the inference rules
 :- op(400, xfy, !).
+
+:- discontiguous rule/4.
+rule(_,_,_,_) :- fail. %% 
 
 %% Examples
 ejemplo1 :-
