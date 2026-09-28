@@ -57,7 +57,7 @@ jobs:
       - name: Reportar nota al Google Sheet central
         if: always()
         env:
-          WEBHOOK_URL: https://script.google.com/macros/s/AKfycby51E8fyXRoZWKUTlrRrmDb6IJX7Sso5nmb5NU1I33kc27RVpaT0HjsDOs3pXjqmLuf/exec
+          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
         run: |
           # 1. Verificación previa de seguridad para evitar fallos confusos
           if [ -z "$WEBHOOK_URL" ]; then
