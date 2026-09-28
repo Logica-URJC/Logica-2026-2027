@@ -54,29 +54,24 @@ jobs:
           echo "Fecha,Usuario_GitHub,Nombre_Alumno,Correo,Grado,Nota" > resultado_evaluacion.csv
           echo "$(date -u +'%Y-%m-%dT%H:%M:%SZ'),${{ github.actor }},\"${{ env.STUDENT_NAME }}\",\"${{ env.STUDENT_EMAIL }}\",\"${{ env.STUDENT_DEGREE }}\",${{ env.SCORE_VAL }}" >> resultado_evaluacion.csv
 
-      - name: Subir CSV de respaldo como artefacto
-        uses: actions/upload-artifact@v4
-        with:
-          name: resultado-evaluacion
-          path: resultado_evaluacion.csv
-
-      # --- PARTE 2: Notificar resultados al profesor ---
-      - name: Publicar feedback en el Step Summary de GitHub
-        run: |
-          echo "## Resultado de la Evaluacion" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          cat resultado.txt >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-
       - name: Reportar nota al Google Sheet central
         if: always()
+        env:
+          WEBHOOK_URL: https://script.google.com/macros/s/AKfycby51E8fyXRoZWKUTlrRrmDb6IJX7Sso5nmb5NU1I33kc27RVpaT0HjsDOs3pXjqmLuf/exec
         run: |
+          # 1. Verificación previa de seguridad para evitar fallos confusos
+          if [ -z "$WEBHOOK_URL" ]; then
+            echo "::error::El Secret WEBHOOK_URL no esta disponible o esta vacio en este repositorio."
+            exit 1
+          fi
+
+          # 2. Construcción limpia del JSON con jq
           jq -n \
             --arg user "${{ github.actor }}" \
             --arg alumno "${STUDENT_NAME}" \
             --arg correo "${STUDENT_EMAIL}" \
             --arg grado "${STUDENT_DEGREE}" \
-            --argjson nota "${SCORE_VAL}" \
+            --argjson nota "${SCORE_VAL:-0}" \
             '{
               user: $user,
               alumno: $alumno,
@@ -85,6 +80,8 @@ jobs:
               nota: $nota
             }' > payload.json
 
-          curl -X POST "${{ secrets.WEBHOOK_URL }}" \
+          # 3. Petición cURL con flag -L (sigue redirecciones HTTP 302 de Google Apps Script)
+          curl -X POST "$WEBHOOK_URL" \
+            -L \
             -H "Content-Type: application/json" \
             --data-binary @payload.json
