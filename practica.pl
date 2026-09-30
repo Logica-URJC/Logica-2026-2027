@@ -50,11 +50,9 @@ enunciado(ejercicio05,
 
 enunciado(ejercicio06,
           [
-              p and q or r,
-              q --> !s,
-              r --> !s
+              p and q --> r
           ],
-          !s
+          p and !r --> !q
          ).
 
 enunciado(ejercicio07,
